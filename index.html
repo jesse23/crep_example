@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SharedArrayBuffer Test</title>
+</head>
+<body>
+    <h1>SharedArrayBuffer Example</h1>
+    <button onclick="startWorker()">Start Worker</button>
+    <div id="output"></div>
+<!--
+    Option 1: Use the credentialless attribute to allow the iframe to work with CORP
+    https://developer.chrome.com/blog/iframe-credentialless
+-->
+    <iframe credentialless src="https://localhost/frame" style="height: 600px; width: 400px;"></iframe>
+
+
+    <script>
+        let sharedBuffer = new SharedArrayBuffer(4); // Create a buffer of 4 bytes
+        let sharedArray = new Uint8Array(sharedBuffer); // Create a typed array view
+
+        // Initialize the shared buffer with a value
+        sharedArray[0] = 42;
+
+        function startWorker() {
+            if (window.Worker) {
+                const worker = new Worker('https://localhost/wasm/worker.js');
+                worker.postMessage(sharedBuffer); // Send the shared buffer to the worker
+
+                // Listen for messages from the worker
+                worker.onmessage = function(event) {
+                    document.getElementById('output').innerText = `Main thread received updated value: ${sharedArray[0]}`;
+                };
+            } else {
+                console.log('Web Workers are not supported in your browser');
+            }
+        }
+    </script>
+</body>
+</html>
